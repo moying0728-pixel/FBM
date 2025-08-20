@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Tailwind 配置 -->
     <script>
@@ -15,18 +16,22 @@
                 extend: {
                     colors: {
                         primary: '#165DFF',
-                        secondary: '#36CFC9',
-                        accent: '#722ED1',
-                        neutral: '#F5F7FA',
+                        secondary: '#FF7D00',
+                        success: '#00B42A',
+                        warning: '#FF7D00',
+                        danger: '#F53F3F',
                         dark: '#1D2129',
-                        success: '#52C41A',
-                        warning: '#FAAD14',
-                        danger: '#FF4D4F',
+                        'gray-light': '#F2F3F5',
+                        'gray-medium': '#C9CDD4'
                     },
                     fontFamily: {
-                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                        inter: ['Inter', 'sans-serif'],
                     },
-                }
+                    boxShadow: {
+                        'card': '0 4px 20px rgba(0, 0, 0, 0.08)',
+                        'card-hover': '0 8px 30px rgba(0, 0, 0, 0.12)',
+                    }
+                },
             }
         }
     </script>
@@ -36,568 +41,1401 @@
             .content-auto {
                 content-visibility: auto;
             }
-            .card-shadow {
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            .transition-height {
+                transition: max-height 0.3s ease-in-out;
             }
-            .transition-all-300 {
-                transition: all 300ms ease-in-out;
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
             }
-            .scale-hover {
-                transition: transform 0.2s;
+            .card-shadow-effect {
+                transition: all 0.3s ease;
             }
-            .scale-hover:hover {
-                transform: scale(1.02);
-            }
-            .autocomplete-items {
-                position: absolute;
-                border: 1px solid #d4d4d4;
-                border-bottom: none;
-                border-top: none;
-                z-index: 99;
-                top: 100%;
-                left: 0;
-                right: 0;
-                max-height: 200px;
-                overflow-y: auto;
-            }
-            .autocomplete-items div {
-                padding: 10px;
-                cursor: pointer;
-                background-color: #fff;
-                border-bottom: 1px solid #d4d4d4;
-            }
-            .autocomplete-items div:hover {
-                background-color: #e9e9e9;
-            }
-            .autocomplete-active {
-                background-color: #165DFF !important;
-                color: #ffffff;
+            .card-shadow-effect:hover {
+                transform: translateY(-4px);
             }
         }
     </style>
 </head>
-<body class="font-inter bg-gray-50 text-dark min-h-screen flex flex-col">
+<body class="font-inter bg-gray-50 text-dark min-h-screen">
     <!-- 顶部导航 -->
-    <header class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="container mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center">
-            <div class="flex items-center mb-4 md:mb-0">
-                <i class="fa fa-calculator text-primary text-2xl mr-3"></i>
-                <h1 class="text-xl md:text-2xl font-bold text-primary">亚马逊FBM物流价格计算器</h1>
+    <header class="bg-white shadow-sm sticky top-0 z-50 transition-all duration-300">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <i class="fa fa-calculator text-primary text-2xl"></i>
+                <h1 class="text-[clamp(1.25rem,3vw,1.75rem)] font-bold text-dark">亚马逊FBM物流价格计算器</h1>
             </div>
-            
-            <nav class="flex space-x-1 md:space-x-4 w-full md:w-auto">
-                <button id="nav-data" class="nav-btn flex-1 md:flex-none px-4 py-2 rounded-md bg-primary text-white font-medium transition-all-300">
-                    <i class="fa fa-database mr-2"></i>数据管理
+            <div class="hidden md:flex items-center space-x-6">
+                <button id="guideBtn" class="text-primary hover:text-primary/80 transition-colors flex items-center">
+                    <i class="fa fa-question-circle mr-1"></i> 使用指南
                 </button>
-                <button id="nav-calculator" class="nav-btn flex-1 md:flex-none px-4 py-2 rounded-md bg-gray-200 text-gray-700 font-medium transition-all-300">
-                    <i class="fa fa-calculator mr-2"></i>运费计算
+                <button id="resetDataBtn" class="text-danger hover:text-danger/80 transition-colors flex items-center">
+                    <i class="fa fa-trash mr-1"></i> 清空数据
                 </button>
-            </nav>
+            </div>
+            <button class="md:hidden text-dark text-xl" id="mobileMenuBtn">
+                <i class="fa fa-bars"></i>
+            </button>
+        </div>
+        
+        <!-- 移动端菜单 -->
+        <div id="mobileMenu" class="hidden md:hidden bg-white border-t">
+            <div class="container mx-auto px-4 py-2 flex flex-col space-y-3">
+                <button id="mobileGuideBtn" class="text-left py-2 text-primary hover:text-primary/80 transition-colors flex items-center">
+                    <i class="fa fa-question-circle mr-2"></i> 使用指南
+                </button>
+                <button id="mobileResetDataBtn" class="text-left py-2 text-danger hover:text-danger/80 transition-colors flex items-center">
+                    <i class="fa fa-trash mr-2"></i> 清空数据
+                </button>
+            </div>
         </div>
     </header>
 
     <!-- 主内容区 -->
-    <main class="flex-grow container mx-auto px-4 py-6">
-        <!-- 数据管理页面 -->
-        <section id="data-management" class="space-y-6">
-            <!-- 数据导入区域 -->
-            <div class="bg-white rounded-xl p-6 card-shadow scale-hover">
-                <h2 class="text-xl font-bold mb-4 flex items-center">
-                    <i class="fa fa-upload text-primary mr-2"></i>数据导入
-                </h2>
-                <div class="grid md:grid-cols-2 gap-6">
-                    <!-- 批量导入 -->
-                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-all-300">
-                        <i class="fa fa-file-excel-o text-4xl text-success mb-3"></i>
-                        <h3 class="font-semibold mb-2">批量导入数据</h3>
-                        <p class="text-gray-500 text-sm mb-4">支持XLSX文件格式，格式要求：国家/地区，物流渠道，体积参数，起始重量(kg)，结束重量(kg)，每kg费用，挂号费</p>
-                        <input type="file" id="file-upload" accept=".xlsx" class="hidden">
-                        <button id="upload-btn" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md transition-all-300">
-                            <i class="fa fa-file-excel-o mr-1"></i> 选择文件
-                        </button>
-                    </div>
-                    
-                    <!-- 手动添加 -->
+    <main class="container mx-auto px-4 py-6 md:py-10">
+        <!-- 步骤指示器 -->
+        <div class="mb-8 bg-white rounded-lg shadow-card p-4">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between">
+                <div class="flex items-center mb-4 md:mb-0">
+                    <div id="step1Indicator" class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold mr-3">1</div>
                     <div>
-                        <h3 class="font-semibold mb-3">手动添加物流信息</h3>
-                        <form id="add-rate-form" class="space-y-4">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">国家/地区</label>
-                                    <div class="relative" id="country-autocomplete-container">
-                                        <input type="text" name="country" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="输入国家/地区名称">
-                                        <div id="country-autocomplete-results" class="autocomplete-items hidden"></div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">物流渠道</label>
-                                    <input type="text" name="channel" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">体积参数 (默认8000)</label>
-                                    <input type="number" name="volumeParam" min="1" value="8000" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">起始重量(kg)</label>
-                                    <input type="number" step="0.01" min="0" name="minWeight" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">结束重量(kg)</label>
-                                    <input type="number" step="0.01" min="0" name="maxWeight" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">每kg费用</label>
-                                    <input type="number" step="0.01" min="0" name="costPerKg" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
-                                </div>
-                                <div class="md:col-span-2">
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">挂号费</label>
-                                    <input type="number" step="0.01" min="0" name="registrationFee" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
-                                </div>
-                            </div>
-                            <button type="submit" class="bg-success hover:bg-success/90 text-white px-6 py-2 rounded-md transition-all-300">
-                                <i class="fa fa-plus mr-1"></i> 添加
-                            </button>
-                        </form>
+                        <h3 class="font-semibold">物流信息管理</h3>
+                        <p class="text-sm text-gray-500">添加、编辑和管理各国物流渠道信息</p>
+                    </div>
+                </div>
+                <div class="hidden md:block w-16 h-1 bg-gray-medium relative">
+                    <div id="progressBar" class="absolute top-0 left-0 h-full bg-primary transition-all duration-500" style="width: 0%"></div>
+                </div>
+                <div class="flex items-center">
+                    <div id="step2Indicator" class="w-10 h-10 rounded-full bg-gray-medium text-white flex items-center justify-center font-bold mr-3">2</div>
+                    <div>
+                        <h3 class="font-semibold">运费计算</h3>
+                        <p class="text-sm text-gray-500">输入包裹信息并计算运费</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 物流信息管理区域 -->
+        <section id="logisticsManagementSection" class="mb-8 bg-white rounded-lg shadow-card overflow-hidden transition-all duration-300">
+            <div class="p-5 border-b border-gray-100">
+                <h2 class="text-xl font-semibold">物流信息管理</h2>
+                <p class="text-gray-500 text-sm">添加和管理各国不同物流渠道的运费信息</p>
+            </div>
+            
+            <!-- 操作按钮 -->
+            <div class="p-5 border-b border-gray-100 flex flex-wrap gap-3 justify-between items-center">
+                <div class="flex flex-wrap gap-3">
+                    <button id="addLogisticsBtn" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg flex items-center transition-all shadow-sm hover:shadow">
+                        <i class="fa fa-plus mr-2"></i> 添加物流信息
+                    </button>
+                    <button id="importBtn" class="bg-secondary hover:bg-secondary/90 text-white px-4 py-2 rounded-lg flex items-center transition-all shadow-sm hover:shadow">
+                        <i class="fa fa-upload mr-2"></i> 导入Excel
+                    </button>
+                    <button id="exportTemplateBtn" class="bg-white border border-gray-300 hover:bg-gray-50 text-dark px-4 py-2 rounded-lg flex items-center transition-all">
+                        <i class="fa fa-download mr-2"></i> 导出模板
+                    </button>
+                    <!-- 将"前往计算运费"按钮移到这里 -->
+                    <button id="proceedToCalculateBtn" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg transition-all shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        前往计算运费 <i class="fa fa-arrow-right ml-1"></i>
+                    </button>
+                </div>
+                <div>
+                    <button id="deleteSelectedBtn" class="bg-danger hover:bg-danger/90 text-white px-4 py-2 rounded-lg flex items-center transition-all shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        <i class="fa fa-trash mr-2"></i> 删除选中
+                    </button>
+                </div>
+                <input type="file" id="fileInput" accept=".xlsx,.xls" class="hidden">
+            </div>
+            
+            <!-- 筛选和搜索 -->
+            <div class="p-5 border-b border-gray-100 bg-gray-50">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">国家/地区</label>
+                        <select id="countryFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all">
+                            <option value="">所有国家</option>
+                        </select>
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">物流渠道</label>
+                        <select id="channelFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all">
+                            <option value="">所有渠道</option>
+                        </select>
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">搜索</label>
+                        <div class="relative">
+                            <input type="text" id="searchLogistics" placeholder="搜索国家、渠道..." class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all">
+                            <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <!-- 数据列表区域 -->
-            <div class="bg-white rounded-xl p-6 card-shadow">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
-                    <h2 class="text-xl font-bold mb-3 md:mb-0 flex items-center">
-                        <i class="fa fa-table text-primary mr-2"></i>物流费率列表
-                    </h2>
-                    <div class="flex space-x-2 w-full md:w-auto">
-                        <div class="relative flex-grow md:flex-grow-0 md:w-64">
-                            <input type="text" id="search-rates" placeholder="搜索国家/渠道..." class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
-                            <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            <!-- 物流信息表格 -->
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 w-12">
+                                <div class="flex items-center">
+                                    <input id="selectAll" type="checkbox" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                </div>
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">国家/地区</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">物流渠道</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">体积参数</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">重量范围(kg)</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">每kg费用</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">挂号费</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logisticsTableBody" class="bg-white divide-y divide-gray-200">
+                        <tr class="text-center">
+                            <td colspan="8" class="px-6 py-12 text-gray-500">
+                                <div class="flex flex-col items-center">
+                                    <i class="fa fa-database text-4xl mb-3 text-gray-300"></i>
+                                    <p>暂无物流信息，请添加或导入数据</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 数据统计 -->
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between items-center">
+                <p class="text-sm text-gray-500"><span id="logisticsCount">0</span> 条物流信息</p>
+            </div>
+        </section>
+        
+        <!-- 运费计算区域 -->
+        <section id="calculationSection" class="mb-8 bg-white rounded-lg shadow-card overflow-hidden hidden transition-all duration-300">
+            <div class="p-5 border-b border-gray-100 flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-semibold">运费计算</h2>
+                    <p class="text-gray-500 text-sm">输入包裹信息并选择需要计算的物流渠道</p>
+                </div>
+                <button id="backToManagementBtn" class="text-primary hover:text-primary/80 transition-colors flex items-center text-sm">
+                    <i class="fa fa-arrow-left mr-1"></i> 返回物流管理
+                </button>
+            </div>
+            
+            <div class="p-5">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- 包裹信息输入 -->
+                    <div class="bg-gray-50 p-5 rounded-lg">
+                        <h3 class="font-semibold mb-4 flex items-center">
+                            <i class="fa fa-box text-primary mr-2"></i> 包裹信息
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">长度(cm)</label>
+                                    <input type="number" id="length" min="0" step="0.1" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all" placeholder="输入长度">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">宽度(cm)</label>
+                                    <input type="number" id="width" min="0" step="0.1" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all" placeholder="输入宽度">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">高度(cm)</label>
+                                    <input type="number" id="height" min="0" step="0.1" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all" placeholder="输入高度">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">体积参数 <span class="text-gray-500 text-xs">(默认8000)</span></label>
+                                <input type="number" id="volumeParam" min="1" value="8000" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all" placeholder="输入体积参数">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">包裹重量(kg)</label>
+                                <input type="number" id="weight" min="0" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all" placeholder="输入重量">
+                            </div>
+                            
+                            <div class="pt-2">
+                                <button id="calculateBtn" class="w-full bg-secondary hover:bg-secondary/90 text-white px-4 py-3 rounded-lg flex items-center justify-center transition-all shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                    <i class="fa fa-calculator mr-2"></i> 计算运费
+                                </button>
+                            </div>
                         </div>
-                        <button id="delete-selected" class="bg-danger hover:bg-danger/90 text-white px-4 py-2 rounded-md transition-all-300 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                            <i class="fa fa-trash mr-1"></i> 删除选中
-                        </button>
                     </div>
-                </div>
-                
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead>
-                            <tr>
-                                <th class="px-4 py-3 bg-gray-50 w-12">
-                                    <input type="checkbox" id="select-all" class="rounded text-primary focus:ring-primary">
-                                </th>
-                                <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">国家/地区</th>
-                                <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">物流渠道</th>
-                                <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">体积参数</th>
-                                <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">重量范围(kg)</th>
-                                <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">每kg费用</th>
-                                <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">挂号费</th>
-                                <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="rates-table-body" class="bg-white divide-y divide-gray-200">
-                            <!-- 数据将通过JavaScript动态填充 -->
-                            <tr class="text-center">
-                                <td colspan="8" class="px-4 py-8 text-gray-500">
-                                    <i class="fa fa-info-circle mr-2"></i>暂无数据，请添加或导入物流费率信息
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div id="pagination" class="mt-4 flex justify-between items-center">
-                    <div class="text-sm text-gray-500">显示 <span id="showing-count">0</span> 条，共 <span id="total-count">0</span> 条</div>
-                    <div class="flex space-x-1">
-                        <button id="prev-page" class="px-3 py-1 border border-gray-300 rounded-md text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                            <i class="fa fa-chevron-left"></i>
-                        </button>
-                        <span id="page-info" class="px-3 py-1 text-gray-600">第 1 页</span>
-                        <button id="next-page" class="px-3 py-1 border border-gray-300 rounded-md text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                            <i class="fa fa-chevron-right"></i>
-                        </button>
+                    
+                    <!-- 物流渠道选择 -->
+                    <div class="bg-gray-50 p-5 rounded-lg">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-semibold flex items-center">
+                                <i class="fa fa-truck text-primary mr-2"></i> 选择物流渠道
+                            </h3>
+                            <div class="flex space-x-2">
+                                <button id="selectAllChannels" class="text-sm bg-primary/10 text-primary px-3 py-1 rounded hover:bg-primary/20 transition-colors">
+                                    全选
+                                </button>
+                                <button id="deselectAllChannels" class="text-sm bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300 transition-colors">
+                                    取消全选
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">国家/地区</label>
+                            <div class="relative">
+                                <input 
+                                    type="text" 
+                                    id="countrySelector" 
+                                    list="countryList"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all" 
+                                    placeholder="输入或选择国家/地区"
+                                >
+                                <datalist id="countryList">
+                                    <!-- 动态填充国家选项 -->
+                                </datalist>
+                                <i class="fa fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                            </div>
+                        </div>
+                        
+                        <div id="channelsContainer" class="max-h-60 overflow-y-auto pr-1 scrollbar-hide border border-gray-200 rounded-lg bg-white">
+                            <div class="p-8 text-center text-gray-500">
+                                <i class="fa fa-info-circle text-2xl mb-2"></i>
+                                <p>请先选择国家/地区</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3 text-sm text-gray-500">
+                            <span id="selectedChannelsCount">0</span> 个渠道已选择
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
         
-        <!-- 运费计算页面 -->
-        <section id="calculator-page" class="space-y-6 hidden">
-            <!-- 输入区域 -->
-            <div class="bg-white rounded-xl p-6 card-shadow scale-hover">
-                <h2 class="text-xl font-bold mb-4 flex items-center">
-                    <i class="fa fa-package text-primary mr-2"></i>包裹信息
-                </h2>
-                <form id="calculator-form" class="space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">国家/地区</label>
-                            <div class="relative" id="calc-country-autocomplete-container">
-                                <input type="text" id="country-input" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="输入或选择国家/地区">
-                                <div id="calc-country-autocomplete-results" class="autocomplete-items hidden"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">包裹重量(kg)</label>
-                            <input type="number" step="0.01" min="0" id="package-weight" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">体积参数 (默认8000)</label>
-                            <input type="number" id="calc-volume-param" min="1" value="8000" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
-                            <p class="text-xs text-gray-500 mt-1">每个渠道可单独设置，此处为默认值</p>
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">包裹尺寸(cm)</label>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div>
-                                <label class="block text-xs text-gray-500 mb-1">长度</label>
-                                <input type="number" step="0.1" min="0" id="length" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
-                            </div>
-                            <div>
-                                <label class="block text-xs text-gray-500 mb-1">宽度</label>
-                                <input type="number" step="0.1" min="0" id="width" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
-                            </div>
-                            <div>
-                                <label class="block text-xs text-gray-500 mb-1">高度</label>
-                                <input type="number" step="0.1" min="0" id="height" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- 渠道选择 -->
-                    <div>
-                        <div class="flex justify-between items-center mb-2">
-                            <label class="block text-sm font-medium text-gray-700">物流渠道 (选择要计算的渠道)</label>
-                            <button type="button" id="select-all-channels" class="text-sm text-primary hover:text-primary/80">
-                                <i class="fa fa-check-square-o mr-1"></i>全选
-                            </button>
-                        </div>
-                        <div id="channels-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-60 overflow-y-auto p-2 border border-gray-200 rounded-md">
-                            <!-- 渠道选择框将通过JavaScript动态填充 -->
-                            <div class="text-center text-gray-500 py-8 col-span-full">
-                                <i class="fa fa-info-circle mr-2"></i>请先选择国家/地区
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="flex justify-end">
-                        <button type="submit" id="calculate-btn" class="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-md transition-all-300 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                            <i class="fa fa-calculator mr-1"></i> 计算运费
-                        </button>
-                    </div>
-                </form>
+        <!-- 计算结果区域 -->
+        <section id="resultsSection" class="mb-8 bg-white rounded-lg shadow-card overflow-hidden hidden transition-all duration-300">
+            <div class="p-5 border-b border-gray-100 flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-semibold">计算结果</h2>
+                    <p class="text-gray-500 text-sm">各渠道运费对比 (按价格从低到高排序)</p>
+                </div>
+                <div class="flex space-x-3">
+                    <button id="backToManagementFromResultsBtn" class="text-primary hover:text-primary/80 transition-colors flex items-center text-sm">
+                        <i class="fa fa-arrow-left mr-1"></i> 返回物流管理
+                    </button>
+                    <button id="recalculateBtn" class="text-primary hover:text-primary/80 transition-colors flex items-center text-sm">
+                        <i class="fa fa-refresh mr-1"></i> 重新计算
+                    </button>
+                </div>
             </div>
             
-            <!-- 结果展示区域 -->
-            <div id="results-section" class="bg-white rounded-xl p-6 card-shadow hidden">
-                <h2 class="text-xl font-bold mb-4 flex items-center">
-                    <i class="fa fa-bar-chart text-primary mr-2"></i>运费计算结果
-                </h2>
-                
-                <div class="mb-4 p-4 bg-blue-50 border border-blue-100 rounded-md">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <p class="text-sm text-gray-600">实际重量</p>
-                            <p class="font-medium" id="result-actual-weight">- kg</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-600">体积重量</p>
-                            <p class="font-medium" id="result-volume-weight">- kg</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-600">计费重量</p>
-                            <p class="font-medium text-primary" id="result-charged-weight">- kg</p>
+            <!-- 包裹信息摘要 -->
+            <div id="packageSummary" class="p-5 bg-gray-50 border-b border-gray-200 grid grid-cols-1 md:grid-cols-4 gap-4">
+                <!-- 动态填充包裹信息 -->
+            </div>
+            
+            <!-- 结果筛选区域 -->
+            <div class="p-5 border-b border-gray-100 bg-gray-50">
+                <div class="flex flex-col md:flex-row gap-4">
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">筛选渠道</label>
+                        <select id="resultChannelFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all">
+                            <option value="">所有渠道</option>
+                        </select>
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">价格范围</label>
+                        <div class="flex gap-2">
+                            <input type="number" id="minPriceFilter" min="0" step="0.01" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all" placeholder="最低">
+                            <span class="flex items-center text-gray-500">-</span>
+                            <input type="number" id="maxPriceFilter" min="0" step="0.01" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all" placeholder="最高">
                         </div>
                     </div>
+                    <div class="flex items-end">
+                        <button id="resetFiltersBtn" class="w-full md:w-auto px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                            重置筛选
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 结果列表 -->
+            <div id="resultsContainer" class="p-5">
+                <div class="text-center py-12 text-gray-500" id="noResultsMessage">
+                    <i class="fa fa-bar-chart text-4xl mb-3 text-gray-300"></i>
+                    <p>请先完成运费计算</p>
                 </div>
                 
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead>
-                            <tr>
-                                <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">物流渠道</th>
-                                <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">重量范围(kg)</th>
-                                <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">每kg费用</th>
-                                <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">挂号费</th>
-                                <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">运费总计</th>
-                            </tr>
-                        </thead>
-                        <tbody id="results-table-body" class="bg-white divide-y divide-gray-200">
-                            <!-- 结果将通过JavaScript动态填充 -->
-                        </tbody>
-                    </table>
+                <div id="resultsList" class="space-y-4">
+                    <!-- 动态填充结果 -->
                 </div>
                 
-                <div id="no-results" class="text-center py-8 text-gray-500 hidden">
-                    <i class="fa fa-exclamation-circle mr-2"></i>没有找到符合条件的物流渠道或重量不在范围内
+                <div class="text-center py-12 text-gray-500 hidden" id="noFilteredResultsMessage">
+                    <i class="fa fa-filter text-4xl mb-3 text-gray-300"></i>
+                    <p>没有符合筛选条件的结果</p>
                 </div>
             </div>
         </section>
     </main>
 
-    <!-- 页脚 -->
-    <footer class="bg-white border-t border-gray-200 py-6">
-        <div class="container mx-auto px-4 text-center text-gray-500 text-sm">
-            <p>亚马逊FBM物流价格计算器 &copy; 2023</p>
-            <p class="mt-1">所有数据存储在本地浏览器中，确保您的信息安全</p>
+    <!-- 添加/编辑物流信息模态框 -->
+    <div id="logisticsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 transform transition-all scale-95 opacity-0" id="modalContent">
+            <div class="p-5 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-lg font-semibold" id="modalTitle">添加物流信息</h3>
+                <button id="closeModal" class="text-gray-500 hover:text-gray-700 transition-colors">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="p-5">
+                <form id="logisticsForm">
+                    <input type="hidden" id="logisticsId">
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="country">国家/地区 <span class="text-danger">*</span></label>
+                        <input type="text" id="country" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all" placeholder="例如：美国、英国">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="channel">物流渠道 <span class="text-danger">*</span></label>
+                        <input type="text" id="channel" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all" placeholder="例如：DHL、FedEx">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="volParam">体积参数 <span class="text-danger">*</span> <span class="text-gray-500 text-xs">(默认8000)</span></label>
+                        <input type="number" id="volParam" min="1" value="8000" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1" for="startWeight">起始重量(kg) <span class="text-danger">*</span></label>
+                            <input type="number" id="startWeight" min="0" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1" for="endWeight">结束重量(kg) <span class="text-danger">*</span></label>
+                            <input type="number" id="endWeight" min="0" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all">
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1" for="costPerKg">每kg费用 <span class="text-danger">*</span></label>
+                            <input type="number" id="costPerKg" min="0" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1" for="registrationFee">挂号费 <span class="text-danger">*</span></label>
+                            <input type="number" id="registrationFee" min="0" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all">
+                        </div>
+                    </div>
+                    
+                    <div class="text-danger text-sm mb-4 hidden" id="formError"></div>
+                </form>
+            </div>
+            
+            <div class="p-5 border-t border-gray-200 flex justify-end space-x-3">
+                <button id="cancelModal" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">取消</button>
+                <button id="saveLogistics" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors shadow-sm hover:shadow">保存</button>
+            </div>
         </div>
-    </footer>
+    </div>
+
+    <!-- 使用指南模态框 -->
+    <div id="guideModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden flex flex-col transform transition-all scale-95 opacity-0" id="guideModalContent">
+            <div class="p-5 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-lg font-semibold">使用指南</h3>
+                <button id="closeGuideModal" class="text-gray-500 hover:text-gray-700 transition-colors">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="p-5 overflow-y-auto flex-1">
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="font-semibold text-primary">1. 物流信息管理</h4>
+                        <p class="text-sm text-gray-600 mt-1">在本部分，您可以添加、编辑和管理各国不同物流渠道的运费信息。</p>
+                        <ul class="list-disc pl-5 text-sm text-gray-600 mt-1 space-y-1">
+                            <li>点击"添加物流信息"手动录入单条物流数据</li>
+                            <li>点击"导入Excel"可批量导入多条物流数据</li>
+                            <li>点击"导出模板"可获取标准格式的Excel模板</li>
+                            <li>可通过国家、渠道筛选或搜索查找特定物流信息</li>
+                            <li>勾选物流信息前的复选框，可批量删除选中项</li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold text-primary">2. 运费计算</h4>
+                        <p class="text-sm text-gray-600 mt-1">添加物流信息后，可在此部分计算包裹的运费。</p>
+                        <ul class="list-disc pl-5 text-sm text-gray-600 mt-1 space-y-1">
+                            <li>输入包裹的长、宽、高(单位：厘米)</li>
+                            <li>输入体积参数(默认为8000)</li>
+                            <li>输入包裹的实际重量(单位：千克)</li>
+                            <li>选择目标国家和需要计算的物流渠道</li>
+                            <li>点击"计算运费"获取各渠道的运费信息</li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold text-primary">3. 结果筛选</h4>
+                        <p class="text-sm text-gray-600 mt-1">在结果页面，您可以使用筛选功能快速找到合适的物流渠道。</p>
+                        <ul class="list-disc pl-5 text-sm text-gray-600 mt-1 space-y-1">
+                            <li>可按物流渠道进行筛选</li>
+                            <li>可设置价格范围进行筛选</li>
+                            <li>点击"重置筛选"可清除所有筛选条件</li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold text-primary">4. 计算逻辑</h4>
+                        <ul class="list-disc pl-5 text-sm text-gray-600 mt-1 space-y-1">
+                            <li>体积重 = 长 × 宽 × 高 ÷ 体积参数</li>
+                            <li>计费重量 = 体积重与实际重量中的较大值</li>
+                            <li>运费 = 计费重量 × 每kg费用 + 挂号费</li>
+                            <li>仅计算在登记的重量范围内的物流选项</li>
+                            <li>结果按运费价格从低到高排序，并标注最低价格</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-5 border-t border-gray-200 flex justify-end">
+                <button id="closeGuide" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors shadow-sm hover:shadow">我知道了</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 确认对话框 -->
+    <div id="confirmDialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 transform transition-all scale-95 opacity-0" id="confirmContent">
+            <div class="p-5 border-b border-gray-200">
+                <h3 class="text-lg font-semibold" id="confirmTitle">确认操作</h3>
+            </div>
+            
+            <div class="p-5">
+                <p id="confirmMessage" class="text-gray-600"></p>
+            </div>
+            
+            <div class="p-5 border-t border-gray-200 flex justify-end space-x-3">
+                <button id="cancelConfirm" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">取消</button>
+                <button id="confirmAction" class="px-4 py-2 bg-danger text-white rounded-lg hover:bg-danger/90 transition-colors shadow-sm hover:shadow">确认</button>
+            </div>
+        </div>
+    </div>
 
     <!-- 通知提示 -->
-    <div id="toast" class="fixed bottom-6 right-6 px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all-300 flex items-center z-50">
-        <i id="toast-icon" class="mr-2"></i>
-        <span id="toast-message"></span>
+    <div id="notification" class="fixed top-4 right-4 max-w-sm bg-white rounded-lg shadow-lg p-4 transform translate-x-full transition-transform duration-300 z-50 flex items-start">
+        <div id="notificationIcon" class="mr-3 text-xl mt-0.5">
+            <i class="fa fa-check-circle text-success"></i>
+        </div>
+        <div class="flex-1">
+            <h4 id="notificationTitle" class="font-medium text-gray-800"></h4>
+            <p id="notificationMessage" class="text-sm text-gray-600 mt-1"></p>
+        </div>
+        <button id="closeNotification" class="text-gray-400 hover:text-gray-600 ml-2">
+            <i class="fa fa-times"></i>
+        </button>
     </div>
 
     <script>
-        // 全局变量
-        let shippingRates = JSON.parse(localStorage.getItem('shippingRates')) || [];
-        let currentPage = 1;
-        const itemsPerPage = 10;
+        // 全局数据存储
+        let logisticsData = JSON.parse(localStorage.getItem('amazonFbmLogistics')) || [];
+        let selectedLogisticsIds = new Set();
+        let selectedChannelIds = new Set();
+        let allResults = []; // 存储所有计算结果，用于筛选
         
         // DOM 元素
-        const navDataBtn = document.getElementById('nav-data');
-        const navCalculatorBtn = document.getElementById('nav-calculator');
-        const dataManagementSection = document.getElementById('data-management');
-        const calculatorSection = document.getElementById('calculator-page');
-        const addRateForm = document.getElementById('add-rate-form');
-        const ratesTableBody = document.getElementById('rates-table-body');
-        const selectAllCheckbox = document.getElementById('select-all');
-        const deleteSelectedBtn = document.getElementById('delete-selected');
-        const fileUploadInput = document.getElementById('file-upload');
-        const uploadBtn = document.getElementById('upload-btn');
-        const searchRatesInput = document.getElementById('search-rates');
-        const countryInput = document.getElementById('country-input');
-        const channelsContainer = document.getElementById('channels-container');
-        const selectAllChannelsBtn = document.getElementById('select-all-channels');
-        const calculatorForm = document.getElementById('calculator-form');
-        const resultsSection = document.getElementById('results-section');
-        const resultsTableBody = document.getElementById('results-table-body');
-        const noResultsDiv = document.getElementById('no-results');
-        const calculateBtn = document.getElementById('calculate-btn');
-        const prevPageBtn = document.getElementById('prev-page');
-        const nextPageBtn = document.getElementById('next-page');
-        const pageInfoSpan = document.getElementById('page-info');
-        const showingCountSpan = document.getElementById('showing-count');
-        const totalCountSpan = document.getElementById('total-count');
+        const logisticsTableBody = document.getElementById('logisticsTableBody');
+        const logisticsCount = document.getElementById('logisticsCount');
+        const proceedToCalculateBtn = document.getElementById('proceedToCalculateBtn');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const countryFilter = document.getElementById('countryFilter');
+        const channelFilter = document.getElementById('channelFilter');
+        const searchLogistics = document.getElementById('searchLogistics');
+        const selectAll = document.getElementById('selectAll');
+        const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+        const countrySelector = document.getElementById('countrySelector');
+        const countryList = document.getElementById('countryList');
+        const channelsContainer = document.getElementById('channelsContainer');
+        const selectedChannelsCount = document.getElementById('selectedChannelsCount');
+        const selectAllChannels = document.getElementById('selectAllChannels');
+        const deselectAllChannels = document.getElementById('deselectAllChannels');
         
-        // 导航切换
-        navDataBtn.addEventListener('click', () => {
-            dataManagementSection.classList.remove('hidden');
-            calculatorSection.classList.add('hidden');
-            navDataBtn.classList.remove('bg-gray-200', 'text-gray-700');
-            navDataBtn.classList.add('bg-primary', 'text-white');
-            navCalculatorBtn.classList.remove('bg-primary', 'text-white');
-            navCalculatorBtn.classList.add('bg-gray-200', 'text-gray-700');
-            renderRatesTable();
+        // 结果筛选相关元素
+        const resultChannelFilter = document.getElementById('resultChannelFilter');
+        const minPriceFilter = document.getElementById('minPriceFilter');
+        const maxPriceFilter = document.getElementById('maxPriceFilter');
+        const resetFiltersBtn = document.getElementById('resetFiltersBtn');
+        const noFilteredResultsMessage = document.getElementById('noFilteredResultsMessage');
+        
+        // 页面区域
+        const logisticsManagementSection = document.getElementById('logisticsManagementSection');
+        const calculationSection = document.getElementById('calculationSection');
+        const resultsSection = document.getElementById('resultsSection');
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            renderLogisticsTable();
+            updateFilters();
+            updateProceedButton();
+            setupEventListeners();
         });
         
-        navCalculatorBtn.addEventListener('click', () => {
-            calculatorSection.classList.remove('hidden');
-            dataManagementSection.classList.add('hidden');
-            navCalculatorBtn.classList.remove('bg-gray-200', 'text-gray-700');
-            navCalculatorBtn.classList.add('bg-primary', 'text-white');
-            navDataBtn.classList.remove('bg-primary', 'text-white');
-            navDataBtn.classList.add('bg-gray-200', 'text-gray-700');
-            initCountryAutocomplete();
-            updateCalculateButtonState();
-        });
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 管理页面事件
+            document.getElementById('addLogisticsBtn').addEventListener('click', () => openModal());
+            document.getElementById('importBtn').addEventListener('click', () => document.getElementById('fileInput').click());
+            document.getElementById('fileInput').addEventListener('change', handleFileImport);
+            document.getElementById('exportTemplateBtn').addEventListener('click', exportTemplate);
+            document.getElementById('proceedToCalculateBtn').addEventListener('click', switchToCalculation);
+            document.getElementById('backToManagementBtn').addEventListener('click', switchToManagement);
+            // 添加结果页面返回物流管理的事件
+            document.getElementById('backToManagementFromResultsBtn').addEventListener('click', switchToManagement);
+            document.getElementById('selectAll').addEventListener('change', handleSelectAll);
+            document.getElementById('deleteSelectedBtn').addEventListener('click', confirmDeleteSelected);
+            document.getElementById('countryFilter').addEventListener('change', renderLogisticsTable);
+            document.getElementById('channelFilter').addEventListener('change', renderLogisticsTable);
+            document.getElementById('searchLogistics').addEventListener('input', renderLogisticsTable);
+            
+            // 计算页面事件
+            document.getElementById('calculateBtn').addEventListener('click', calculateShippingCost);
+            document.getElementById('recalculateBtn').addEventListener('click', switchToCalculationFromResults);
+            document.getElementById('countrySelector').addEventListener('input', populateChannels);
+            document.getElementById('selectAllChannels').addEventListener('click', handleSelectAllChannels);
+            document.getElementById('deselectAllChannels').addEventListener('click', handleDeselectAllChannels);
+            
+            // 结果筛选事件
+            resultChannelFilter.addEventListener('change', applyFilters);
+            minPriceFilter.addEventListener('input', applyFilters);
+            maxPriceFilter.addEventListener('input', applyFilters);
+            resetFiltersBtn.addEventListener('click', resetFilters);
+            
+            // 模态框事件
+            document.getElementById('closeModal').addEventListener('click', closeModal);
+            document.getElementById('cancelModal').addEventListener('click', closeModal);
+            document.getElementById('saveLogistics').addEventListener('click', saveLogistics);
+            
+            // 指南模态框事件
+            document.getElementById('guideBtn').addEventListener('click', openGuideModal);
+            document.getElementById('mobileGuideBtn').addEventListener('click', openGuideModal);
+            document.getElementById('closeGuideModal').addEventListener('click', closeGuideModal);
+            document.getElementById('closeGuide').addEventListener('click', closeGuideModal);
+            
+            // 确认对话框事件
+            document.getElementById('cancelConfirm').addEventListener('click', closeConfirmDialog);
+            document.getElementById('confirmAction').addEventListener('click', executeConfirmAction);
+            
+            // 通知事件
+            document.getElementById('closeNotification').addEventListener('click', closeNotification);
+            
+            // 移动端菜单事件
+            document.getElementById('mobileMenuBtn').addEventListener('click', toggleMobileMenu);
+            
+            // 清空数据事件
+            document.getElementById('resetDataBtn').addEventListener('click', confirmResetData);
+            document.getElementById('mobileResetDataBtn').addEventListener('click', confirmResetData);
+            
+            // 输入验证
+            ['length', 'width', 'height', 'volumeParam', 'weight', 'countrySelector'].forEach(id => {
+                document.getElementById(id).addEventListener('input', validateCalculationInputs);
+            });
+        }
         
-        // 添加费率
-        addRateForm.addEventListener('submit', (e) => {
-            e.preventDefault();
+        // 渲染物流信息表格
+        function renderLogisticsTable() {
+            const country = countryFilter.value;
+            const channel = channelFilter.value;
+            const searchTerm = searchLogistics.value.toLowerCase();
             
-            const formData = new FormData(addRateForm);
-            const newRate = {
-                id: Date.now().toString(),
-                country: formData.get('country').trim(),
-                channel: formData.get('channel').trim(),
-                volumeParam: parseFloat(formData.get('volumeParam')),
-                minWeight: parseFloat(formData.get('minWeight')),
-                maxWeight: parseFloat(formData.get('maxWeight')),
-                costPerKg: parseFloat(formData.get('costPerKg')),
-                registrationFee: parseFloat(formData.get('registrationFee'))
-            };
+            // 过滤数据
+            const filteredData = logisticsData.filter(item => {
+                const matchesCountry = !country || item.country === country;
+                const matchesChannel = !channel || item.channel === channel;
+                const matchesSearch = !searchTerm || 
+                                     item.country.toLowerCase().includes(searchTerm) ||
+                                     item.channel.toLowerCase().includes(searchTerm);
+                return matchesCountry && matchesChannel && matchesSearch;
+            });
             
-            // 验证起始重量小于结束重量
-            if (newRate.minWeight >= newRate.maxWeight) {
-                showToast('错误', '起始重量必须小于结束重量', 'error');
-                return;
-            }
-            
-            shippingRates.push(newRate);
-            saveShippingRates();
-            renderRatesTable();
-            addRateForm.reset();
-            document.querySelector('input[name="volumeParam"]').value = 8000;
-            
-            showToast('成功', '物流费率添加成功', 'success');
-        });
-        
-        // 渲染费率表格
-        function renderRatesTable() {
-            const searchTerm = searchRatesInput.value.toLowerCase().trim();
-            let filteredRates = shippingRates;
-            
-            // 搜索过滤
-            if (searchTerm) {
-                filteredRates = shippingRates.filter(rate => 
-                    rate.country.toLowerCase().includes(searchTerm) || 
-                    rate.channel.toLowerCase().includes(searchTerm)
-                );
-            }
-            
-            // 分页处理
-            const totalPages = Math.ceil(filteredRates.length / itemsPerPage);
-            const startIndex = (currentPage - 1) * itemsPerPage;
-            const endIndex = startIndex + itemsPerPage;
-            const paginatedRates = filteredRates.slice(startIndex, endIndex);
-            
-            // 更新分页信息
-            prevPageBtn.disabled = currentPage === 1;
-            nextPageBtn.disabled = currentPage === totalPages || totalPages === 0;
-            pageInfoSpan.textContent = `第 ${currentPage} 页 / 共 ${totalPages || 1} 页`;
-            showingCountSpan.textContent = paginatedRates.length;
-            totalCountSpan.textContent = filteredRates.length;
-            
-            // 清空表格
-            ratesTableBody.innerHTML = '';
-            
-            if (paginatedRates.length === 0) {
-                ratesTableBody.innerHTML = `
+            // 更新表格
+            if (filteredData.length === 0) {
+                logisticsTableBody.innerHTML = `
                     <tr class="text-center">
-                        <td colspan="8" class="px-4 py-8 text-gray-500">
-                            <i class="fa fa-search mr-2"></i>没有找到匹配的数据
+                        <td colspan="8" class="px-6 py-12 text-gray-500">
+                            <div class="flex flex-col items-center">
+                                <i class="fa fa-search text-4xl mb-3 text-gray-300"></i>
+                                <p>没有找到匹配的物流信息</p>
+                            </div>
                         </td>
                     </tr>
                 `;
+            } else {
+                logisticsTableBody.innerHTML = filteredData.map(item => `
+                    <tr class="hover:bg-gray-50 transition-colors card-shadow-effect">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <input type="checkbox" data-id="${item.id}" class="logistics-checkbox h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded" 
+                                ${selectedLogisticsIds.has(item.id) ? 'checked' : ''}>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">${item.country}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${item.channel}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${item.volumeParam}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${item.startWeight} - ${item.endWeight}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${item.costPerKg}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${item.registrationFee}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button data-id="${item.id}" class="edit-btn text-primary hover:text-primary/80 mr-3">
+                                <i class="fa fa-pencil"></i> 编辑
+                            </button>
+                            <button data-id="${item.id}" class="delete-btn text-danger hover:text-danger/80">
+                                <i class="fa fa-trash"></i> 删除
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+                
+                // 添加复选框事件
+                document.querySelectorAll('.logistics-checkbox').forEach(checkbox => {
+                    checkbox.addEventListener('change', (e) => {
+                        const id = e.target.getAttribute('data-id');
+                        if (e.target.checked) {
+                            selectedLogisticsIds.add(id);
+                        } else {
+                            selectedLogisticsIds.delete(id);
+                        }
+                        updateDeleteButton();
+                    });
+                });
+                
+                // 添加编辑按钮事件
+                document.querySelectorAll('.edit-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const id = e.target.closest('.edit-btn').getAttribute('data-id');
+                        editLogistics(id);
+                    });
+                });
+                
+                // 添加删除按钮事件
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const id = e.target.closest('.delete-btn').getAttribute('data-id');
+                        confirmDelete(id);
+                    });
+                });
+            }
+            
+            // 更新计数
+            logisticsCount.textContent = filteredData.length;
+            updateDeleteButton();
+        }
+        
+        // 更新筛选器选项
+        function updateFilters() {
+            // 获取所有唯一的国家和渠道
+            const countries = [...new Set(logisticsData.map(item => item.country))].sort();
+            const channels = [...new Set(logisticsData.map(item => item.channel))].sort();
+            
+            // 更新国家筛选器
+            const currentCountryFilter = countryFilter.value;
+            countryFilter.innerHTML = '<option value="">所有国家</option>';
+            countries.forEach(country => {
+                const option = document.createElement('option');
+                option.value = country;
+                option.textContent = country;
+                if (country === currentCountryFilter) {
+                    option.selected = true;
+                }
+                countryFilter.appendChild(option);
+            });
+            
+            // 更新渠道筛选器
+            const currentChannelFilter = channelFilter.value;
+            channelFilter.innerHTML = '<option value="">所有渠道</option>';
+            channels.forEach(channel => {
+                const option = document.createElement('option');
+                option.value = channel;
+                option.textContent = channel;
+                if (channel === currentChannelFilter) {
+                    option.selected = true;
+                }
+                channelFilter.appendChild(option);
+            });
+            
+            // 更新国家选择器（计算页面）的datalist
+            countryList.innerHTML = '';
+            countries.forEach(country => {
+                const option = document.createElement('option');
+                option.value = country;
+                countryList.appendChild(option);
+            });
+        }
+        
+        // 更新"前往计算"按钮状态
+        function updateProceedButton() {
+            proceedToCalculateBtn.disabled = logisticsData.length === 0;
+            document.getElementById('progressBar').style.width = logisticsData.length > 0 ? '100%' : '0%';
+            document.getElementById('step2Indicator').className = logisticsData.length > 0 
+                ? 'w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold mr-3'
+                : 'w-10 h-10 rounded-full bg-gray-medium text-white flex items-center justify-center font-bold mr-3';
+        }
+        
+        // 更新删除选中按钮状态
+        function updateDeleteButton() {
+            deleteSelectedBtn.disabled = selectedLogisticsIds.size === 0;
+        }
+        
+        // 处理全选
+        function handleSelectAll(e) {
+            const isChecked = e.target.checked;
+            const country = countryFilter.value;
+            const channel = channelFilter.value;
+            const searchTerm = searchLogistics.value.toLowerCase();
+            
+            // 获取当前筛选条件下的所有ID
+            const filteredIds = logisticsData
+                .filter(item => {
+                    const matchesCountry = !country || item.country === country;
+                    const matchesChannel = !channel || item.channel === channel;
+                    const matchesSearch = !searchTerm || 
+                                         item.country.toLowerCase().includes(searchTerm) ||
+                                         item.channel.toLowerCase().includes(searchTerm);
+                    return matchesCountry && matchesChannel && matchesSearch;
+                })
+                .map(item => item.id);
+            
+            // 更新选中集合
+            selectedLogisticsIds.clear();
+            if (isChecked) {
+                filteredIds.forEach(id => selectedLogisticsIds.add(id));
+            }
+            
+            // 更新UI
+            renderLogisticsTable();
+        }
+        
+        // 打开添加/编辑模态框
+        function openModal(logisticsItem = null) {
+            const modal = document.getElementById('logisticsModal');
+            const modalContent = document.getElementById('modalContent');
+            const form = document.getElementById('logisticsForm');
+            
+            // 重置表单
+            form.reset();
+            document.getElementById('logisticsId').value = '';
+            document.getElementById('formError').classList.add('hidden');
+            
+            // 设置标题
+            document.getElementById('modalTitle').textContent = logisticsItem ? '编辑物流信息' : '添加物流信息';
+            
+            // 如果是编辑，填充表单
+            if (logisticsItem) {
+                document.getElementById('logisticsId').value = logisticsItem.id;
+                document.getElementById('country').value = logisticsItem.country;
+                document.getElementById('channel').value = logisticsItem.channel;
+                document.getElementById('volParam').value = logisticsItem.volumeParam;
+                document.getElementById('startWeight').value = logisticsItem.startWeight;
+                document.getElementById('endWeight').value = logisticsItem.endWeight;
+                document.getElementById('costPerKg').value = logisticsItem.costPerKg;
+                document.getElementById('registrationFee').value = logisticsItem.registrationFee;
+            }
+            
+            // 显示模态框
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modalContent.classList.remove('scale-95', 'opacity-0');
+                modalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+        
+        // 关闭模态框
+        function closeModal() {
+            const modal = document.getElementById('logisticsModal');
+            const modalContent = document.getElementById('modalContent');
+            
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+        
+        // 编辑物流信息
+        function editLogistics(id) {
+            const logisticsItem = logisticsData.find(item => item.id === id);
+            if (logisticsItem) {
+                openModal(logisticsItem);
+            }
+        }
+        
+        // 保存物流信息
+        function saveLogistics() {
+            // 获取表单数据
+            const id = document.getElementById('logisticsId').value;
+            const country = document.getElementById('country').value.trim();
+            const channel = document.getElementById('channel').value.trim();
+            const volumeParam = parseFloat(document.getElementById('volParam').value);
+            const startWeight = parseFloat(document.getElementById('startWeight').value);
+            const endWeight = parseFloat(document.getElementById('endWeight').value);
+            const costPerKg = parseFloat(document.getElementById('costPerKg').value);
+            const registrationFee = parseFloat(document.getElementById('registrationFee').value);
+            
+            // 验证表单
+            const errorElement = document.getElementById('formError');
+            if (!country) {
+                showFormError('请输入国家/地区');
+                return;
+            }
+            if (!channel) {
+                showFormError('请输入物流渠道');
+                return;
+            }
+            if (isNaN(volumeParam) || volumeParam <= 0) {
+                showFormError('请输入有效的体积参数');
+                return;
+            }
+            if (isNaN(startWeight) || startWeight < 0) {
+                showFormError('请输入有效的起始重量');
+                return;
+            }
+            if (isNaN(endWeight) || endWeight <= 0 || endWeight <= startWeight) {
+                showFormError('请输入有效的结束重量，必须大于起始重量');
+                return;
+            }
+            if (isNaN(costPerKg) || costPerKg < 0) {
+                showFormError('请输入有效的每kg费用');
+                return;
+            }
+            if (isNaN(registrationFee) || registrationFee < 0) {
+                showFormError('请输入有效的挂号费');
                 return;
             }
             
-            // 填充表格
-            paginatedRates.forEach(rate => {
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-50 transition-all-300';
-                row.innerHTML = `
-                    <td class="px-4 py-3">
-                        <input type="checkbox" class="rate-checkbox rounded text-primary focus:ring-primary" data-id="${rate.id}">
-                    </td>
-                    <td class="px-4 py-3">${rate.country}</td>
-                    <td class="px-4 py-3">${rate.channel}</td>
-                    <td class="px-4 py-3">${rate.volumeParam}</td>
-                    <td class="px-4 py-3">${rate.minWeight} - ${rate.maxWeight}</td>
-                    <td class="px-4 py-3">${rate.costPerKg.toFixed(2)}</td>
-                    <td class="px-4 py-3">${rate.registrationFee.toFixed(2)}</td>
-                    <td class="px-4 py-3">
-                        <button class="delete-rate text-danger hover:text-danger/80" data-id="${rate.id}">
-                            <i class="fa fa-trash"></i>
-                        </button>
-                    </td>
+            // 隐藏错误
+            errorElement.classList.add('hidden');
+            
+            // 准备数据对象
+            const logisticsDataObj = {
+                country,
+                channel,
+                volumeParam,
+                startWeight,
+                endWeight,
+                costPerKg,
+                registrationFee
+            };
+            
+            if (id) {
+                // 更新现有记录
+                const index = logisticsData.findIndex(item => item.id === id);
+                if (index !== -1) {
+                    logisticsData[index] = { ...logisticsData[index], ...logisticsDataObj };
+                    saveLogisticsData();
+                    showNotification('成功', '物流信息已更新');
+                }
+            } else {
+                // 添加新记录
+                logisticsData.push({
+                    id: generateId(),
+                    ...logisticsDataObj
+                });
+                saveLogisticsData();
+                showNotification('成功', '物流信息已添加');
+            }
+            
+            // 关闭模态框并刷新表格
+            closeModal();
+        }
+        
+        // 显示表单错误
+        function showFormError(message) {
+            const errorElement = document.getElementById('formError');
+            errorElement.textContent = message;
+            errorElement.classList.remove('hidden');
+        }
+        
+        // 确认删除单个物流信息
+        function confirmDelete(id) {
+            openConfirmDialog(
+                '确认删除',
+                '您确定要删除这条物流信息吗？此操作不可撤销。',
+                () => {
+                    logisticsData = logisticsData.filter(item => item.id !== id);
+                    selectedLogisticsIds.delete(id);
+                    saveLogisticsData();
+                    showNotification('成功', '物流信息已删除');
+                }
+            );
+        }
+        
+        // 确认删除选中的物流信息
+        function confirmDeleteSelected() {
+            if (selectedLogisticsIds.size === 0) return;
+            
+            openConfirmDialog(
+                '确认删除',
+                `您确定要删除选中的 ${selectedLogisticsIds.size} 条物流信息吗？此操作不可撤销。`,
+                () => {
+                    logisticsData = logisticsData.filter(item => !selectedLogisticsIds.has(item.id));
+                    selectedLogisticsIds.clear();
+                    saveLogisticsData();
+                    showNotification('成功', `已删除 ${selectedLogisticsIds.size} 条物流信息`);
+                }
+            );
+        }
+        
+        // 确认重置所有数据
+        function confirmResetData() {
+            openConfirmDialog(
+                '确认清空所有数据',
+                '您确定要清空所有物流信息吗？此操作不可撤销，所有数据将被永久删除。',
+                () => {
+                    logisticsData = [];
+                    selectedLogisticsIds.clear();
+                    saveLogisticsData();
+                    showNotification('成功', '所有数据已清空');
+                }
+            );
+        }
+        
+        // 打开确认对话框
+        function openConfirmDialog(title, message, confirmAction) {
+            const dialog = document.getElementById('confirmDialog');
+            const confirmContent = document.getElementById('confirmContent');
+            
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmMessage').textContent = message;
+            
+            // 存储确认后要执行的操作
+            window.confirmAction = confirmAction;
+            
+            // 显示对话框
+            dialog.classList.remove('hidden');
+            setTimeout(() => {
+                confirmContent.classList.remove('scale-95', 'opacity-0');
+                confirmContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+        
+        // 关闭确认对话框
+        function closeConfirmDialog() {
+            const dialog = document.getElementById('confirmDialog');
+            const confirmContent = document.getElementById('confirmContent');
+            
+            confirmContent.classList.remove('scale-100', 'opacity-100');
+            confirmContent.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                dialog.classList.add('hidden');
+                window.confirmAction = null;
+            }, 300);
+        }
+        
+        // 执行确认操作
+        function executeConfirmAction() {
+            if (window.confirmAction) {
+                window.confirmAction();
+            }
+            closeConfirmDialog();
+        }
+        
+        // 切换到计算页面
+        function switchToCalculation() {
+            logisticsManagementSection.classList.add('hidden');
+            calculationSection.classList.remove('hidden');
+            resultsSection.classList.add('hidden');
+            
+            // 重置计算表单
+            document.getElementById('length').value = '';
+            document.getElementById('width').value = '';
+            document.getElementById('height').value = '';
+            document.getElementById('volumeParam').value = 8000;
+            document.getElementById('weight').value = '';
+            countrySelector.value = '';
+            selectedChannelIds.clear();
+            populateChannels();
+            validateCalculationInputs();
+        }
+        
+        // 从结果页面切换到计算页面
+        function switchToCalculationFromResults() {
+            resultsSection.classList.add('hidden');
+            calculationSection.classList.remove('hidden');
+        }
+        
+        // 切换到管理页面
+        function switchToManagement() {
+            calculationSection.classList.add('hidden');
+            resultsSection.classList.add('hidden');
+            logisticsManagementSection.classList.remove('hidden');
+        }
+        
+        // 填充渠道选择
+        function populateChannels() {
+            const country = countrySelector.value.trim();
+            selectedChannelIds.clear();
+            
+            if (!country) {
+                channelsContainer.innerHTML = `
+                    <div class="p-8 text-center text-gray-500">
+                        <i class="fa fa-info-circle text-2xl mb-2"></i>
+                        <p>请先选择国家/地区</p>
+                    </div>
                 `;
-                ratesTableBody.appendChild(row);
+                updateSelectedChannelsCount();
+                return;
+            }
+            
+            // 获取该国家的所有渠道
+            const channels = [...new Set(
+                logisticsData
+                    .filter(item => item.country.toLowerCase() === country.toLowerCase())
+                    .map(item => item.channel)
+            )].sort();
+            
+            if (channels.length === 0) {
+                channelsContainer.innerHTML = `
+                    <div class="p-8 text-center text-gray-500">
+                        <i class="fa fa-exclamation-circle text-2xl mb-2"></i>
+                        <p>没有找到该国家的物流渠道信息</p>
+                    </div>
+                `;
+            } else {
+                channelsContainer.innerHTML = channels.map(channel => `
+                    <div class="flex items-center p-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
+                        <input type="checkbox" data-channel="${channel}" class="channel-checkbox h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded mr-3">
+                        <label for="" class="flex-1 cursor-pointer">${channel}</label>
+                    </div>
+                `).join('');
+                
+                // 添加渠道复选框事件
+                document.querySelectorAll('.channel-checkbox').forEach(checkbox => {
+                    checkbox.addEventListener('change', (e) => {
+                        const channel = e.target.getAttribute('data-channel');
+                        if (e.target.checked) {
+                            selectedChannelIds.add(channel);
+                        } else {
+                            selectedChannelIds.delete(channel);
+                        }
+                        updateSelectedChannelsCount();
+                        validateCalculationInputs();
+                    });
+                });
+            }
+            
+            updateSelectedChannelsCount();
+            validateCalculationInputs();
+        }
+        
+        // 更新选中渠道计数
+        function updateSelectedChannelsCount() {
+            selectedChannelsCount.textContent = selectedChannelIds.size;
+        }
+        
+        // 处理渠道全选
+        function handleSelectAllChannels() {
+            const country = countrySelector.value;
+            if (!country) return;
+            
+            // 获取该国家的所有渠道
+            const channels = [...new Set(
+                logisticsData
+                    .filter(item => item.country.toLowerCase() === country.toLowerCase())
+                    .map(item => item.channel)
+            )];
+            
+            channels.forEach(channel => {
+                selectedChannelIds.add(channel);
             });
             
-            // 添加删除单个费率的事件监听
-            document.querySelectorAll('.delete-rate').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const id = e.currentTarget.getAttribute('data-id');
-                    deleteRate(id);
+            // 更新UI
+            document.querySelectorAll('.channel-checkbox').forEach(checkbox => {
+                checkbox.checked = true;
+            });
+            
+            updateSelectedChannelsCount();
+            validateCalculationInputs();
+        }
+        
+        // 处理渠道取消全选
+        function handleDeselectAllChannels() {
+            selectedChannelIds.clear();
+            
+            // 更新UI
+            document.querySelectorAll('.channel-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            
+            updateSelectedChannelsCount();
+            validateCalculationInputs();
+        }
+        
+        // 验证计算输入
+        function validateCalculationInputs() {
+            const length = parseFloat(document.getElementById('length').value);
+            const width = parseFloat(document.getElementById('width').value);
+            const height = parseFloat(document.getElementById('height').value);
+            const volumeParam = parseFloat(document.getElementById('volumeParam').value);
+            const weight = parseFloat(document.getElementById('weight').value);
+            const country = countrySelector.value.trim();
+            
+            const isValid = !isNaN(length) && length > 0 &&
+                           !isNaN(width) && width > 0 &&
+                           !isNaN(height) && height > 0 &&
+                           !isNaN(volumeParam) && volumeParam > 0 &&
+                           !isNaN(weight) && weight > 0 &&
+                           country !== '' &&
+                           selectedChannelIds.size > 0;
+            
+            calculateBtn.disabled = !isValid;
+        }
+        
+        // 计算运费
+        function calculateShippingCost() {
+            // 获取输入数据
+            const length = parseFloat(document.getElementById('length').value);
+            const width = parseFloat(document.getElementById('width').value);
+            const height = parseFloat(document.getElementById('height').value);
+            const volumeParamInput = parseFloat(document.getElementById('volumeParam').value);
+            const actualWeight = parseFloat(document.getElementById('weight').value);
+            const country = countrySelector.value.trim();
+            
+            // 计算体积重
+            const volumeWeight = (length * width * height) / volumeParamInput;
+            // 取较大值作为计费重量
+            const chargeableWeight = Math.max(actualWeight, volumeWeight);
+            
+            // 获取选中渠道的物流信息
+            const results = [];
+            
+            selectedChannelIds.forEach(channel => {
+                // 获取该国家和渠道下，重量范围包含计费重量的物流信息
+                const logisticsItems = logisticsData.filter(item => 
+                    item.country.toLowerCase() === country.toLowerCase() &&
+                    item.channel === channel &&
+                    item.startWeight <= chargeableWeight &&
+                    item.endWeight >= chargeableWeight
+                );
+                
+                // 计算运费
+                logisticsItems.forEach(item => {
+                    const shippingCost = (chargeableWeight * item.costPerKg) + item.registrationFee;
+                    results.push({
+                        country: item.country,
+                        channel: item.channel,
+                        startWeight: item.startWeight,
+                        endWeight: item.endWeight,
+                        costPerKg: item.costPerKg,
+                        registrationFee: item.registrationFee,
+                        volumeParam: item.volumeParam,
+                        chargeableWeight,
+                        shippingCost: parseFloat(shippingCost.toFixed(2))
+                    });
                 });
             });
             
-            // 添加复选框事件监听
-            document.querySelectorAll('.rate-checkbox').forEach(checkbox => {
-                checkbox.addEventListener('change', updateDeleteButtonState);
-            });
-        }
-        
-        // 全选/取消全选
-        selectAllCheckbox.addEventListener('change', (e) => {
-            const isChecked = e.target.checked;
-            document.querySelectorAll('.rate-checkbox').forEach(checkbox => {
-                checkbox.checked = isChecked;
-            });
-            updateDeleteButtonState();
-        });
-        
-        // 更新删除按钮状态
-        function updateDeleteButtonState() {
-            const checkedCount = document.querySelectorAll('.rate-checkbox:checked').length;
-            deleteSelectedBtn.disabled = checkedCount === 0;
-        }
-        
-        // 删除选中的费率
-        deleteSelectedBtn.addEventListener('click', () => {
-            const checkedIds = Array.from(document.querySelectorAll('.rate-checkbox:checked'))
-                .map(checkbox => checkbox.getAttribute('data-id'));
+            // 按运费从低到高排序
+            results.sort((a, b) => a.shippingCost - b.shippingCost);
             
-            if (confirm(`确定要删除选中的 ${checkedIds.length} 条记录吗？`)) {
-                shippingRates = shippingRates.filter(rate => !checkedIds.includes(rate.id));
-                saveShippingRates();
-                renderRatesTable();
-                selectAllCheckbox.checked = false;
-                updateDeleteButtonState();
-                showToast('成功', `已删除 ${checkedIds.length} 条记录`, 'success');
-            }
-        });
-        
-        // 删除单个费率
-        function deleteRate(id) {
-            if (confirm('确定要删除这条记录吗？')) {
-                shippingRates = shippingRates.filter(rate => rate.id !== id);
-                saveShippingRates();
-                renderRatesTable();
-                updateDeleteButtonState();
-                showToast('成功', '记录已删除', 'success');
-            }
+            // 保存所有结果用于筛选
+            allResults = [...results];
+            
+            // 显示结果
+            displayResults({
+                length,
+                width,
+                height,
+                volumeParamInput,
+                actualWeight,
+                volumeWeight,
+                chargeableWeight,
+                country,
+                results
+            });
+            
+            // 初始化结果筛选器
+            initResultFilters(results);
+            
+            // 切换到结果页面
+            calculationSection.classList.add('hidden');
+            resultsSection.classList.remove('hidden');
         }
         
-        // 保存费率数据到本地存储
-        function saveShippingRates() {
-            localStorage.setItem('shippingRates', JSON.stringify(shippingRates));
-            // 更新计算页面的国家和渠道列表
-            initCountryAutocomplete();
+        // 初始化结果筛选器
+        function initResultFilters(results) {
+            // 获取所有唯一的渠道
+            const channels = [...new Set(results.map(item => item.channel))].sort();
+            
+            // 清空并填充渠道筛选器
+            resultChannelFilter.innerHTML = '<option value="">所有渠道</option>';
+            channels.forEach(channel => {
+                const option = document.createElement('option');
+                option.value = channel;
+                option.textContent = channel;
+                resultChannelFilter.appendChild(option);
+            });
+            
+            // 重置价格筛选器
+            minPriceFilter.value = '';
+            maxPriceFilter.value = '';
         }
         
-        // 分页控制
-        prevPageBtn.addEventListener('click', () => {
-            if (currentPage > 1) {
-                currentPage--;
-                renderRatesTable();
+        // 应用筛选条件
+        function applyFilters() {
+            const channel = resultChannelFilter.value;
+            const minPrice = parseFloat(minPriceFilter.value) || 0;
+            const maxPrice = parseFloat(maxPriceFilter.value) || Infinity;
+            
+            // 应用筛选
+            const filteredResults = allResults.filter(item => {
+                const matchesChannel = !channel || item.channel === channel;
+                const matchesPrice = item.shippingCost >= minPrice && item.shippingCost <= maxPrice;
+                return matchesChannel && matchesPrice;
+            });
+            
+            // 更新显示
+            const resultsList = document.getElementById('resultsList');
+            const noResultsMessage = document.getElementById('noResultsMessage');
+            
+            noResultsMessage.classList.add('hidden');
+            noFilteredResultsMessage.classList.add('hidden');
+            resultsList.classList.remove('hidden');
+            
+            if (filteredResults.length === 0) {
+                resultsList.classList.add('hidden');
+                noFilteredResultsMessage.classList.remove('hidden');
+                return;
             }
-        });
+            
+            // 找出最低运费
+            const minCost = filteredResults[0].shippingCost;
+            
+            resultsList.innerHTML = filteredResults.map((result, index) => `
+                <div class="border border-gray-200 rounded-lg overflow-hidden card-shadow-effect ${index === 0 ? 'border-primary' : ''}">
+                    <div class="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                        <div>
+                            <h4 class="font-semibold ${index === 0 ? 'text-primary' : ''}">${result.channel}</h4>
+                            <p class="text-sm text-gray-500">${result.country}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-2xl font-bold ${index === 0 ? 'text-primary' : ''}">¥${result.shippingCost.toFixed(2)}</p>
+                            ${index === 0 ? '<span class="bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full">最低价格</span>' : ''}
+                        </div>
+                    </div>
+                    <div class="p-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div>
+                            <p class="text-gray-500">重量范围</p>
+                            <p>${result.startWeight} - ${result.endWeight} kg</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500">每kg费用 / 挂号费</p>
+                            <p>¥${result.costPerKg} / ¥${result.registrationFee}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500">体积参数 / 计费重量</p>
+                            <p>${result.volumeParam} / ${result.chargeableWeight.toFixed(2)} kg</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
         
-        nextPageBtn.addEventListener('click', () => {
-            const searchTerm = searchRatesInput.value.toLowerCase().trim();
-            const filteredRates = searchTerm 
-                ? shippingRates.filter(rate => 
-                    rate.country.toLowerCase().includes(searchTerm) || 
-                    rate.channel.toLowerCase().includes(searchTerm)
-                  )
-                : shippingRates;
+        // 重置筛选条件
+        function resetFilters() {
+            resultChannelFilter.value = '';
+            minPriceFilter.value = '';
+            maxPriceFilter.value = '';
+            applyFilters();
+        }
+        
+        // 显示计算结果
+        function displayResults(data) {
+            const {
+                length,
+                width,
+                height,
+                volumeParamInput,
+                actualWeight,
+                volumeWeight,
+                chargeableWeight,
+                country,
+                results
+            } = data;
+            
+            // 更新包裹信息摘要
+            document.getElementById('packageSummary').innerHTML = `
+                <div class="bg-white p-3 rounded-lg shadow-sm">
+                    <p class="text-xs text-gray-500">包裹尺寸</p>
+                    <p class="font-medium">${length} × ${width} × ${height} cm</p>
+                </div>
+                <div class="bg-white p-3 rounded-lg shadow-sm">
+                    <p class="text-xs text-gray-500">体积参数</p>
+                    <p class="font-medium">${volumeParamInput}</p>
+                </div>
+                <div class="bg-white p-3 rounded-lg shadow-sm">
+                    <p class="text-xs text-gray-500">实际重量</p>
+                    <p class="font-medium">${actualWeight.toFixed(2)} kg</p>
+                </div>
+                <div class="bg-white p-3 rounded-lg shadow-sm">
+                    <p class="text-xs text-gray-500">计费重量</p>
+                    <p class="font-medium text-primary">${chargeableWeight.toFixed(2)} kg</p>
+                </div>
+            `;
+            
+            // 更新结果列表
+            const resultsList = document.getElementById('resultsList');
+            const noResultsMessage = document.getElementById('noResultsMessage');
+            const noFilteredResultsMessage = document.getElementById('noFilteredResultsMessage');
+            
+            noFilteredResultsMessage.classList.add('hidden');
+            
+            if (results.length === 0) {
+                resultsList.classList.add('hidden');
+                noResultsMessage.classList.remove('hidden');
+                noResultsMessage.innerHTML = `
+                    <i class="fa fa-exclamation-circle text-4xl mb-3 text-gray-300"></i>
+                    <p>没有找到符合条件的物流渠道</p>
+                    <p class="text-sm mt-1">可能是所选渠道的重量范围不包含计算出的计费重量</p>
+                `;
+            } else {
+                noResultsMessage.classList.add('hidden');
+                resultsList.classList.remove('hidden');
                 
-            const totalPages = Math.ceil(filteredRates.length / itemsPerPage);
-            
-            if (currentPage < totalPages) {
-                currentPage++;
-                renderRatesTable();
+                // 找出最低运费
+                const minCost = results[0].shippingCost;
+                
+                resultsList.innerHTML = results.map((result, index) => `
+                    <div class="border border-gray-200 rounded-lg overflow-hidden card-shadow-effect ${index === 0 ? 'border-primary' : ''}">
+                        <div class="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                            <div>
+                                <h4 class="font-semibold ${index === 0 ? 'text-primary' : ''}">${result.channel}</h4>
+                                <p class="text-sm text-gray-500">${result.country}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-2xl font-bold ${index === 0 ? 'text-primary' : ''}">¥${result.shippingCost.toFixed(2)}</p>
+                                ${index === 0 ? '<span class="bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full">最低价格</span>' : ''}
+                            </div>
+                        </div>
+                        <div class="p-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div>
+                                <p class="text-gray-500">重量范围</p>
+                                <p>${result.startWeight} - ${result.endWeight} kg</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-500">每kg费用 / 挂号费</p>
+                                <p>¥${result.costPerKg} / ¥${result.registrationFee}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-500">体积参数 / 计费重量</p>
+                                <p>${result.volumeParam} / ${result.chargeableWeight.toFixed(2)} kg</p>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
             }
-        });
+        }
         
-        // 搜索功能
-        searchRatesInput.addEventListener('input', () => {
-            currentPage = 1; // 重置到第一页
-            renderRatesTable();
-        });
-        
-        // 文件上传
-        uploadBtn.addEventListener('click', () => {
-            fileUploadInput.click();
-        });
-        
-        fileUploadInput.addEventListener('change', (e) => {
+        // 处理文件导入
+        function handleFileImport(e) {
             const file = e.target.files[0];
             if (!file) return;
             
@@ -610,394 +1448,187 @@
                     const worksheet = workbook.Sheets[firstSheetName];
                     const jsonData = XLSX.utils.sheet_to_json(worksheet);
                     
-                    // 验证并导入数据
-                    importFromJson(jsonData);
+                    // 验证导入数据
+                    if (jsonData.length === 0) {
+                        showNotification('错误', '导入的文件没有数据', 'error');
+                        return;
+                    }
                     
-                    // 重置文件输入
-                    fileUploadInput.value = '';
+                    // 检查表头
+                    const requiredFields = ['国家/地区', '物流渠道', '体积参数', '起始重量(kg)', '结束重量(kg)', '每kg费用', '挂号费'];
+                    const firstRow = jsonData[0];
+                    const missingFields = requiredFields.filter(field => !(field in firstRow));
+                    
+                    if (missingFields.length > 0) {
+                        showNotification('错误', `导入的文件缺少必要的列：${missingFields.join(', ')}`, 'error');
+                        return;
+                    }
+                    
+                    // 处理导入的数据
+                    let importedCount = 0;
+                    jsonData.forEach(item => {
+                        try {
+                            const logisticsItem = {
+                                id: generateId(),
+                                country: item['国家/地区']?.toString().trim() || '',
+                                channel: item['物流渠道']?.toString().trim() || '',
+                                volumeParam: parseFloat(item['体积参数']) || 8000,
+                                startWeight: parseFloat(item['起始重量(kg)']) || 0,
+                                endWeight: parseFloat(item['结束重量(kg)']) || 0,
+                                costPerKg: parseFloat(item['每kg费用']) || 0,
+                                registrationFee: parseFloat(item['挂号费']) || 0
+                            };
+                            
+                            // 基本验证
+                            if (logisticsItem.country && logisticsItem.channel && 
+                                logisticsItem.startWeight >= 0 && logisticsItem.endWeight > logisticsItem.startWeight &&
+                                logisticsItem.costPerKg >= 0 && logisticsItem.registrationFee >= 0) {
+                                
+                                logisticsData.push(logisticsItem);
+                                importedCount++;
+                            }
+                        } catch (error) {
+                            console.error('处理导入数据时出错：', error);
+                        }
+                    });
+                    
+                    // 保存数据并刷新
+                    saveLogisticsData();
+                    showNotification('成功', `成功导入 ${importedCount} 条物流信息`);
+                    
                 } catch (error) {
-                    console.error('导入失败:', error);
-                    showToast('错误', '文件解析失败，请检查文件格式', 'error');
+                    console.error('导入文件时出错：', error);
+                    showNotification('错误', '导入文件失败，请检查文件格式是否正确', 'error');
                 }
             };
             reader.readAsArrayBuffer(file);
-        });
-        
-        // 从JSON导入数据
-        function importFromJson(jsonData) {
-            if (!jsonData || jsonData.length === 0) {
-                showToast('错误', '文件中没有数据', 'error');
-                return;
-            }
             
-            let importedCount = 0;
-            let errorCount = 0;
-            
-            jsonData.forEach((item, index) => {
-                try {
-                    // 映射Excel列到我们的数据结构（处理可能的列名变化）
-                    const country = item['国家/地区'] || item['国家'] || item['country'];
-                    const channel = item['物流渠道'] || item['渠道'] || item['channel'];
-                    const volumeParam = item['体积参数'] || item['volumeParam'] || 8000;
-                    const minWeight = item['起始重量(kg)'] || item['起始重量'] || item['minWeight'];
-                    const maxWeight = item['结束重量(kg)'] || item['结束重量'] || item['maxWeight'];
-                    const costPerKg = item['每kg费用'] || item['费用/kg'] || item['costPerKg'];
-                    const registrationFee = item['挂号费'] || item['registrationFee'];
-                    
-                    // 验证必要字段
-                    if (!country || !channel || minWeight === undefined || maxWeight === undefined || 
-                        costPerKg === undefined || registrationFee === undefined) {
-                        throw new Error('缺少必要的字段');
-                    }
-                    
-                    // 转换为数字
-                    const parsedVolumeParam = parseFloat(volumeParam) || 8000;
-                    const parsedMinWeight = parseFloat(minWeight);
-                    const parsedMaxWeight = parseFloat(maxWeight);
-                    const parsedCostPerKg = parseFloat(costPerKg);
-                    const parsedRegistrationFee = parseFloat(registrationFee);
-                    
-                    // 验证数字有效性
-                    if (isNaN(parsedMinWeight) || isNaN(parsedMaxWeight) || 
-                        isNaN(parsedCostPerKg) || isNaN(parsedRegistrationFee)) {
-                        throw new Error('数值字段格式不正确');
-                    }
-                    
-                    // 验证重量范围
-                    if (parsedMinWeight >= parsedMaxWeight) {
-                        throw new Error('起始重量必须小于结束重量');
-                    }
-                    
-                    // 添加到费率列表
-                    shippingRates.push({
-                        id: Date.now() + index.toString(),
-                        country: country.toString().trim(),
-                        channel: channel.toString().trim(),
-                        volumeParam: parsedVolumeParam,
-                        minWeight: parsedMinWeight,
-                        maxWeight: parsedMaxWeight,
-                        costPerKg: parsedCostPerKg,
-                        registrationFee: parsedRegistrationFee
-                    });
-                    
-                    importedCount++;
-                } catch (error) {
-                    console.error(`导入第 ${index + 1} 行失败:`, error);
-                    errorCount++;
-                }
-            });
-            
-            // 保存并更新UI
-            saveShippingRates();
-            renderRatesTable();
-            
-            // 显示结果
-            if (importedCount > 0) {
-                showToast('成功', `成功导入 ${importedCount} 条记录${errorCount > 0 ? `，${errorCount} 条记录导入失败` : ''}`, 'success');
-            } else {
-                showToast('错误', `所有 ${errorCount} 条记录导入失败，请检查文件格式`, 'error');
-            }
+            // 重置文件输入
+            document.getElementById('fileInput').value = '';
         }
         
-        // 初始化国家自动完成功能
-        function initCountryAutocomplete() {
-            // 获取唯一的国家列表
-            const countries = [...new Set(shippingRates.map(rate => rate.country))].sort();
-            
-            // 设置数据管理页面的国家输入自动完成
-            setupAutocomplete(
-                document.querySelector('input[name="country"]'),
-                document.getElementById('country-autocomplete-results'),
-                countries
-            );
-            
-            // 设置计算页面的国家输入自动完成
-            setupAutocomplete(
-                countryInput,
-                document.getElementById('calc-country-autocomplete-results'),
-                countries
-            );
-            
-            // 添加国家输入变化事件
-            countryInput.addEventListener('change', () => {
-                const selectedCountry = countryInput.value.trim();
-                if (selectedCountry) {
-                    populateChannels(selectedCountry);
-                } else {
-                    channelsContainer.innerHTML = `
-                        <div class="text-center text-gray-500 py-8 col-span-full">
-                            <i class="fa fa-info-circle mr-2"></i>请先选择国家/地区
-                        </div>
-                    `;
+        // 导出模板
+        function exportTemplate() {
+            // 创建模板数据
+            const templateData = [
+                {
+                    '国家/地区': '美国',
+                    '物流渠道': 'DHL',
+                    '体积参数': 8000,
+                    '起始重量(kg)': 0,
+                    '结束重量(kg)': 2,
+                    '每kg费用': 50,
+                    '挂号费': 30
+                },
+                {
+                    '国家/地区': '美国',
+                    '物流渠道': 'DHL',
+                    '体积参数': 8000,
+                    '起始重量(kg)': 2,
+                    '结束重量(kg)': 5,
+                    '每kg费用': 45,
+                    '挂号费': 30
+                },
+                {
+                    '国家/地区': '英国',
+                    '物流渠道': 'FedEx',
+                    '体积参数': 8000,
+                    '起始重量(kg)': 0,
+                    '结束重量(kg)': 3,
+                    '每kg费用': 40,
+                    '挂号费': 25
                 }
-                updateCalculateButtonState();
-            });
+            ];
+            
+            // 创建工作簿和工作表
+            const worksheet = XLSX.utils.json_to_sheet(templateData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, '物流信息模板');
+            
+            // 导出文件
+            XLSX.writeFile(workbook, '亚马逊FBM物流信息模板.xlsx');
+            showNotification('成功', '模板文件已导出');
         }
         
-        // 设置自动完成功能
-        function setupAutocomplete(inputElement, resultsElement, dataList) {
-            // 输入事件处理
-            inputElement.addEventListener('input', function() {
-                const value = this.value.toLowerCase().trim();
-                resultsElement.innerHTML = '';
-                resultsElement.classList.add('hidden');
-                
-                if (value.length < 1) return;
-                
-                // 过滤匹配项
-                const matches = dataList.filter(item => 
-                    item.toLowerCase().includes(value)
-                );
-                
-                if (matches.length === 0) return;
-                
-                // 显示结果
-                resultsElement.classList.remove('hidden');
-                
-                // 添加匹配项到结果列表
-                matches.forEach(match => {
-                    const div = document.createElement('div');
-                    div.innerHTML = match;
-                    div.addEventListener('click', function() {
-                        inputElement.value = match;
-                        resultsElement.innerHTML = '';
-                        resultsElement.classList.add('hidden');
-                        
-                        // 如果是计算页面的国家输入，触发渠道更新
-                        if (inputElement.id === 'country-input') {
-                            populateChannels(match);
-                            updateCalculateButtonState();
-                        }
-                    });
-                    resultsElement.appendChild(div);
-                });
-            });
+        // 打开使用指南
+        function openGuideModal() {
+            const modal = document.getElementById('guideModal');
+            const modalContent = document.getElementById('guideModalContent');
             
-            // 点击其他地方关闭自动完成
-            document.addEventListener('click', function(e) {
-                if (!inputElement.contains(e.target) && !resultsElement.contains(e.target)) {
-                    resultsElement.innerHTML = '';
-                    resultsElement.classList.add('hidden');
-                }
-            });
-            
-            // 键盘导航
-            inputElement.addEventListener('keydown', function(e) {
-                const items = resultsElement.getElementsByTagName('div');
-                if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    if (items.length > 0) {
-                        items[0].classList.add('autocomplete-active');
-                    }
-                } else if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    if (items.length > 0) {
-                        items[items.length - 1].classList.add('autocomplete-active');
-                    }
-                } else if (e.key === 'Enter') {
-                    e.preventDefault();
-                    const activeItem = resultsElement.querySelector('.autocomplete-active');
-                    if (activeItem) {
-                        activeItem.click();
-                    }
-                }
-            });
-            
-            // 为结果项添加键盘导航支持
-            resultsElement.addEventListener('click', function(e) {
-                if (e.target.tagName === 'DIV') {
-                    // 移除其他项的active类
-                    Array.from(resultsElement.children).forEach(item => {
-                        item.classList.remove('autocomplete-active');
-                    });
-                    // 给当前项添加active类
-                    e.target.classList.add('autocomplete-active');
-                }
-            });
-        }
-        
-        // 根据选中的国家填充渠道选择框
-        function populateChannels(country) {
-            // 获取该国家的所有渠道
-            const countryRates = shippingRates.filter(rate => rate.country === country);
-            const channels = [...new Set(countryRates.map(rate => rate.channel))].sort();
-            
-            // 清空渠道容器
-            channelsContainer.innerHTML = '';
-            
-            if (channels.length === 0) {
-                channelsContainer.innerHTML = `
-                    <div class="text-center text-gray-500 py-8 col-span-full">
-                        <i class="fa fa-info-circle mr-2"></i>没有找到该国家的物流渠道
-                    </div>
-                `;
-                return;
-            }
-            
-            // 添加渠道复选框
-            channels.forEach(channel => {
-                const channelDiv = document.createElement('div');
-                channelDiv.className = 'flex items-center';
-                channelDiv.innerHTML = `
-                    <input type="checkbox" id="channel-${channel}" name="channels" value="${channel}" 
-                           class="channel-checkbox rounded text-primary focus:ring-primary mr-2">
-                    <label for="channel-${channel}" class="text-sm">${channel}</label>
-                `;
-                channelsContainer.appendChild(channelDiv);
-            });
-            
-            // 添加渠道复选框事件监听
-            document.querySelectorAll('.channel-checkbox').forEach(checkbox => {
-                checkbox.addEventListener('change', updateCalculateButtonState);
-            });
-            
-            updateCalculateButtonState();
-        }
-        
-        // 全选/取消全选渠道
-        selectAllChannelsBtn.addEventListener('click', () => {
-            const checkboxes = document.querySelectorAll('.channel-checkbox');
-            if (checkboxes.length === 0) return;
-            
-            // 检查是否已经全选
-            const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
-            
-            // 全选或取消全选
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = !allChecked;
-            });
-            
-            // 更新按钮文本
-            selectAllChannelsBtn.innerHTML = allChecked 
-                ? '<i class="fa fa-check-square-o mr-1"></i>全选' 
-                : '<i class="fa fa-square-o mr-1"></i>取消全选';
-                
-            updateCalculateButtonState();
-        });
-        
-        // 更新计算按钮状态
-        function updateCalculateButtonState() {
-            const countrySelected = countryInput.value.trim() !== '';
-            const channelsSelected = document.querySelectorAll('.channel-checkbox:checked').length > 0;
-            calculateBtn.disabled = !(countrySelected && channelsSelected && shippingRates.length > 0);
-        }
-        
-        // 计算运费
-        calculatorForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            
-            // 获取表单数据
-            const country = countryInput.value.trim();
-            const weight = parseFloat(document.getElementById('package-weight').value);
-            const length = parseFloat(document.getElementById('length').value);
-            const width = parseFloat(document.getElementById('width').value);
-            const height = parseFloat(document.getElementById('height').value);
-            const defaultVolumeParam = parseFloat(document.getElementById('calc-volume-param').value);
-            
-            // 获取选中的渠道
-            const selectedChannels = Array.from(document.querySelectorAll('.channel-checkbox:checked'))
-                .map(checkbox => checkbox.value);
-            
-            // 计算体积重量
-            const volumeWeight = (length * width * height) / defaultVolumeParam;
-            // 取实际重量和体积重量中的较大值作为计费重量
-            const chargedWeight = Math.max(weight, volumeWeight);
-            
-            // 更新结果概览
-            document.getElementById('result-actual-weight').textContent = weight.toFixed(2) + ' kg';
-            document.getElementById('result-volume-weight').textContent = volumeWeight.toFixed(2) + ' kg';
-            document.getElementById('result-charged-weight').textContent = chargedWeight.toFixed(2) + ' kg';
-            
-            // 筛选符合条件的费率
-            const applicableRates = shippingRates.filter(rate => 
-                rate.country === country &&
-                selectedChannels.includes(rate.channel) &&
-                chargedWeight >= rate.minWeight &&
-                chargedWeight <= rate.maxWeight
-            );
-            
-            // 计算运费并排序
-            const results = applicableRates.map(rate => {
-                const shippingCost = (chargedWeight * rate.costPerKg) + rate.registrationFee;
-                return {
-                    ...rate,
-                    chargedWeight,
-                    shippingCost
-                };
-            }).sort((a, b) => a.shippingCost - b.shippingCost);
-            
-            // 显示结果
-            resultsTableBody.innerHTML = '';
-            
-            if (results.length === 0) {
-                resultsSection.classList.remove('hidden');
-                noResultsDiv.classList.remove('hidden');
-                return;
-            }
-            
-            noResultsDiv.classList.add('hidden');
-            resultsSection.classList.remove('hidden');
-            
-            // 填充结果表格
-            results.forEach(result => {
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-50 transition-all-300';
-                row.innerHTML = `
-                    <td class="px-4 py-3 font-medium">${result.channel}</td>
-                    <td class="px-4 py-3">${result.minWeight} - ${result.maxWeight} kg</td>
-                    <td class="px-4 py-3">${result.costPerKg.toFixed(2)}</td>
-                    <td class="px-4 py-3">${result.registrationFee.toFixed(2)}</td>
-                    <td class="px-4 py-3 font-medium text-primary">${result.shippingCost.toFixed(2)}</td>
-                `;
-                resultsTableBody.appendChild(row);
-            });
-        });
-        
-        // 显示提示消息
-        function showToast(title, message, type = 'info') {
-            const toast = document.getElementById('toast');
-            const toastIcon = document.getElementById('toast-icon');
-            const toastMessage = document.getElementById('toast-message');
-            
-            // 设置图标和样式
-            switch (type) {
-                case 'success':
-                    toast.className = 'fixed bottom-6 right-6 px-6 py-3 rounded-lg shadow-lg transform translate-y-0 opacity-100 transition-all-300 flex items-center z-50 bg-success text-white';
-                    toastIcon.className = 'fa fa-check-circle mr-2';
-                    break;
-                case 'error':
-                    toast.className = 'fixed bottom-6 right-6 px-6 py-3 rounded-lg shadow-lg transform translate-y-0 opacity-100 transition-all-300 flex items-center z-50 bg-danger text-white';
-                    toastIcon.className = 'fa fa-exclamation-circle mr-2';
-                    break;
-                case 'warning':
-                    toast.className = 'fixed bottom-6 right-6 px-6 py-3 rounded-lg shadow-lg transform translate-y-0 opacity-100 transition-all-300 flex items-center z-50 bg-warning text-white';
-                    toastIcon.className = 'fa fa-warning mr-2';
-                    break;
-                default:
-                    toast.className = 'fixed bottom-6 right-6 px-6 py-3 rounded-lg shadow-lg transform translate-y-0 opacity-100 transition-all-300 flex items-center z-50 bg-primary text-white';
-                    toastIcon.className = 'fa fa-info-circle mr-2';
-            }
-            
-            // 设置消息
-            toastMessage.innerHTML = `<strong>${title}:</strong> ${message}`;
-            
-            // 3秒后隐藏
+            modal.classList.remove('hidden');
             setTimeout(() => {
-                toast.className = 'fixed bottom-6 right-6 px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all-300 flex items-center z-50';
-            }, 3000);
+                modalContent.classList.remove('scale-95', 'opacity-0');
+                modalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+            
+            // 关闭移动端菜单（如果打开）
+            document.getElementById('mobileMenu').classList.add('hidden');
         }
         
-        // 初始化
-        window.addEventListener('DOMContentLoaded', () => {
-            renderRatesTable();
-            initCountryAutocomplete();
-            updateCalculateButtonState();
+        // 关闭使用指南
+        function closeGuideModal() {
+            const modal = document.getElementById('guideModal');
+            const modalContent = document.getElementById('guideModalContent');
             
-            // 检查是否有数据，如果没有，显示提示
-            if (shippingRates.length === 0) {
-                showToast('提示', '请先添加或导入物流费率数据', 'info');
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+        
+        // 显示通知
+        function showNotification(title, message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const notificationTitle = document.getElementById('notificationTitle');
+            const notificationMessage = document.getElementById('notificationMessage');
+            const notificationIcon = document.getElementById('notificationIcon');
+            
+            // 设置通知内容和类型
+            notificationTitle.textContent = title;
+            notificationMessage.textContent = message;
+            
+            // 设置图标
+            if (type === 'success') {
+                notificationIcon.innerHTML = '<i class="fa fa-check-circle text-success"></i>';
+            } else if (type === 'error') {
+                notificationIcon.innerHTML = '<i class="fa fa-times-circle text-danger"></i>';
+            } else if (type === 'warning') {
+                notificationIcon.innerHTML = '<i class="fa fa-exclamation-triangle text-warning"></i>';
             }
-        });
+            
+            // 显示通知
+            notification.classList.remove('translate-x-full');
+            
+            // 3秒后自动关闭
+            setTimeout(closeNotification, 3000);
+        }
+        
+        // 关闭通知
+        function closeNotification() {
+            const notification = document.getElementById('notification');
+            notification.classList.add('translate-x-full');
+        }
+        
+        // 切换移动端菜单
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            mobileMenu.classList.toggle('hidden');
+        }
+        
+        // 保存物流数据到本地存储
+        function saveLogisticsData() {
+            localStorage.setItem('amazonFbmLogistics', JSON.stringify(logisticsData));
+            renderLogisticsTable();
+            updateFilters();
+            updateProceedButton();
+        }
+        
+        // 生成唯一ID
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+        }
     </script>
 </body>
 </html>
